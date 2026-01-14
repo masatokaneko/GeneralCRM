@@ -1,0 +1,48 @@
+{
+  "name": "crm-platform",
+  "version": "0.1.0",
+  "description": "Enterprise CRM Platform - Sales Cloud & Service Cloud",
+  "private": true,
+  "packageManager": "npm@11.3.0",
+  "workspaces": [
+    "apps/*",
+    "packages/mcp-server",
+    "packages/shared-i18n",
+    "packages/mcp"
+  ],
+  "scripts": {
+    "dev": "turbo dev storybook --ui=tui --filter=!@monorepo/mcp-server --filter=!@monorepo/mcp --filter=!@monorepo/shared-i18n",
+    "build": "turbo build --filter=!@monorepo/mcp-server --filter=!@monorepo/mcp",
+    "start": "turbo start --filter=!@monorepo/mcp-server --filter=!@monorepo/mcp",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "format": "turbo format",
+    "check": "turbo check",
+    "type-check": "turbo type-check",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "mcp:dev": "npm run dev -w @monorepo/mcp",
+    "mcp:start": "npm run start --workspace=@monorepo/mcp-server",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-toast": "^1.2.15",
+    "husky": "^9.1.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.7",
+    "turbo": "^2.6.2",
+    "typescript": "5.9.3"
+  },
+  "lint-staged": {
+    "apps/web/**/*.{ts,tsx}": [
+      "biome check --write"
+    ]
+  },
+  "msw": {
+    "workerDirectory": [
+      "apps/web/public"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "server": {
+    "name": "Cursor Next.js Boilerplate MCP",
+    "version": "1.0.0",
+    "description": "Development tools MCP server for cursor-nextjs-boilerplate project"
+  },
+  "paths": {
+    "docsDir": "docs",
+    "mcpServerDir": "mcp-server"
+  },
+  "features": {
+    "docs": true,
+    "biome": true
+  }
+}

@@ -1,0 +1,67 @@
+# 依存関係
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+
+# Next.js ビルド出力
+.next
+out
+.turbo
+
+# 開発関連
+.env*.local
+.env.development
+.env.test
+
+# テスト
+coverage
+test-results
+playwright-report
+.storybook-cache
+storybook-static
+
+# キャッシュ
+.cache
+*.log
+.DS_Store
+tmp
+
+# IDE設定
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.github
+.gitlab
+
+# ドキュメント
+*.md
+!README.md
+_docs
+docs
+
+# その他の不要なファイル
+.editorconfig
+.prettierrc
+.eslintrc*
+biome.json
+.npmrc
+.yarnrc
+
+# プラットフォーム固有
+Thumbs.db
+
+# Playwright
+playwright-report
+test-results
+
+# Storybook
+storybook-static
+doctor-storybook.log

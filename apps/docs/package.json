@@ -1,0 +1,33 @@
+{
+	"name": "@monorepo/docs",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev --turbopack -p 8080",
+		"postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
+		"build": "next build",
+		"start": "next start",
+		"lint": "next lint",
+		"lint:fix": "biome lint --write ./",
+		"format": "biome format --write ./",
+		"check": "biome check --write ./",
+		"type-check": "tsc --noEmit --skipLibCheck"
+	},
+	"dependencies": {
+		"@next/mdx": "^15.5.3",
+		"next": "15.5.3",
+		"next-mdx-remote": "^5.0.0",
+		"nextra": "4.4.0",
+		"nextra-theme-docs": "4.4.0",
+		"react": "19.1.1",
+		"react-dom": "19.1.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.2.4",
+		"@types/node": "24.3.1",
+		"@types/react": "19.1.12",
+		"@types/react-dom": "19.1.9",
+		"pagefind": "^1.4.0",
+		"typescript": "5.9.2"
+	}
+}

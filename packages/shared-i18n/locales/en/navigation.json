@@ -1,0 +1,12 @@
+{
+  "home": "Home",
+  "dashboard": "Dashboard",
+  "settings": "Settings",
+  "profile": "Profile",
+  "logout": "Logout",
+  "login": "Login",
+  "menu": {
+    "open": "Open menu",
+    "close": "Close menu"
+  }
+}

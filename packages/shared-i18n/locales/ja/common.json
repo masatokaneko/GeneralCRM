@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "UI Demo",
+    "description": "UI デモアプリケーション"
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "success": "成功しました",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "create": "作成",
+    "search": "検索",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "prev": "前へ"
+  },
+  "validation": {
+    "required": "必須項目です",
+    "invalid": "無効な値です"
+  }
+}

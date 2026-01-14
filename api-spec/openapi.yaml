@@ -1,0 +1,977 @@
+openapi: 3.0.3
+info:
+  title: Antigravity CRM API
+  description: |
+    Salesforce同等のエンタープライズCRM APIです。
+
+    ## 認証
+    - Bearer Token（OAuth2/JWT）
+    - テナント識別: X-Tenant-Id ヘッダまたはJWT内に内包
+
+    ## 権限制御
+    - Object Permission: CRUD権限
+    - Field Permission: 項目の参照/編集権限
+    - Record Access: レコードレベルの共有
+
+    ## 保存パイプライン
+    全ての書き込み操作は以下のパイプラインを通過:
+    AuthZ → Validation → Automation → Persist → Audit → Outbox
+  version: 1.0.0
+  contact:
+    name: Antigravity CRM Team
+
+servers:
+  - url: http://localhost:8080/v1
+    description: Development server
+  - url: https://api.antigravity.crm/v1
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: 認証・ユーザー情報
+  - name: Metadata
+    description: メタデータ・スキーマ情報
+  - name: Accounts
+    description: 取引先管理
+  - name: Contacts
+    description: 取引先責任者管理
+  - name: Leads
+    description: リード管理
+  - name: Opportunities
+    description: 商談管理
+  - name: Quotes
+    description: 見積管理
+  - name: Query
+    description: クエリ・検索
+  - name: Sharing
+    description: 共有設定
+
+paths:
+  # ===================
+  # Authentication
+  # ===================
+  /me:
+    get:
+      tags: [Authentication]
+      summary: 自分の情報を取得
+      operationId: getMe
+      responses:
+        '200':
+          description: ユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===================
+  # Metadata
+  # ===================
+  /metadata/objects:
+    get:
+      tags: [Metadata]
+      summary: オブジェクト一覧を取得
+      operationId: getObjects
+      responses:
+        '200':
+          description: オブジェクト一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ObjectMetadata'
+
+  /metadata/objects/{objectName}/describe:
+    get:
+      tags: [Metadata]
+      summary: オブジェクトの詳細定義を取得
+      operationId: describeObject
+      parameters:
+        - $ref: '#/components/parameters/ObjectName'
+      responses:
+        '200':
+          description: オブジェクト定義
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDescribe'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===================
+  # Generic SObject CRUD
+  # ===================
+  /sobjects/{objectName}:
+    post:
+      tags: [Accounts, Contacts, Leads, Opportunities, Quotes]
+      summary: レコードを作成
+      operationId: createRecord
+      parameters:
+        - $ref: '#/components/parameters/ObjectName'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /sobjects/{objectName}/{id}:
+    get:
+      tags: [Accounts, Contacts, Leads, Opportunities, Quotes]
+      summary: レコードを取得
+      operationId: getRecord
+      parameters:
+        - $ref: '#/components/parameters/ObjectName'
+        - $ref: '#/components/parameters/RecordId'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        '200':
+          description: レコード
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Accounts, Contacts, Leads, Opportunities, Quotes]
+      summary: レコードを更新
+      operationId: updateRecord
+      parameters:
+        - $ref: '#/components/parameters/ObjectName'
+        - $ref: '#/components/parameters/RecordId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Accounts, Contacts, Leads, Opportunities, Quotes]
+      summary: レコードを削除（論理削除）
+      operationId: deleteRecord
+      parameters:
+        - $ref: '#/components/parameters/ObjectName'
+        - $ref: '#/components/parameters/RecordId'
+      responses:
+        '204':
+          description: 削除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sobjects/{objectName}/batchGet:
+    post:
+      tags: [Accounts, Contacts, Leads, Opportunities, Quotes]
+      summary: 複数レコードを一括取得
+      operationId: batchGetRecords
+      parameters:
+        - $ref: '#/components/parameters/ObjectName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  maxItems: 200
+                fields:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: レコード一覧
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchGetResponse'
+
+  # ===================
+  # Related Records
+  # ===================
+  /sobjects/{objectName}/{id}/related/{relationName}:
+    get:
+      tags: [Accounts, Contacts, Opportunities]
+      summary: 関連レコードを取得
+      operationId: getRelatedRecords
+      parameters:
+        - $ref: '#/components/parameters/ObjectName'
+        - $ref: '#/components/parameters/RecordId'
+        - name: relationName
+          in: path
+          required: true
+          schema:
+            type: string
+          example: Contacts
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: 関連レコード一覧
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+
+  # ===================
+  # Query API
+  # ===================
+  /query/{objectName}:
+    get:
+      tags: [Query]
+      summary: レコードをクエリ
+      operationId: queryRecords
+      parameters:
+        - $ref: '#/components/parameters/ObjectName'
+        - name: filter
+          in: query
+          description: |
+            フィルタ条件。例: `StageName = "Proposal" AND CloseDate >= "2026-01-01"`
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: ソート。降順は-prefix。例: `-CloseDate`
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Fields'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: クエリ結果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+
+  /search:
+    get:
+      tags: [Query]
+      summary: グローバル検索
+      operationId: globalSearch
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: 検索キーワード
+          schema:
+            type: string
+            minLength: 2
+        - name: objects
+          in: query
+          description: 検索対象オブジェクト（カンマ区切り）
+          schema:
+            type: string
+          example: Account,Contact,Opportunity
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: 検索結果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+
+  # ===================
+  # Lead Convert
+  # ===================
+  /leads/{leadId}/convert:
+    post:
+      tags: [Leads]
+      summary: リードを変換
+      description: |
+        リードをAccount/Contact/Opportunityに変換します。
+
+        前提条件:
+        - LeadがQualified状態
+        - 変換権限を持つ
+      operationId: convertLead
+      parameters:
+        - name: leadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadConvertRequest'
+      responses:
+        '200':
+          description: 変換成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeadConvertResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ===================
+  # Opportunity Actions
+  # ===================
+  /opportunities/{id}/changeStage:
+    post:
+      tags: [Opportunities]
+      summary: 商談ステージを変更
+      operationId: changeOpportunityStage
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stageName]
+              properties:
+                stageName:
+                  type: string
+                  example: Negotiation
+                expectedVersion:
+                  type: string
+                  description: 楽観ロック用バージョン
+      responses:
+        '200':
+          description: ステージ変更成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /opportunities/{id}/close:
+    post:
+      tags: [Opportunities]
+      summary: 商談をクローズ
+      operationId: closeOpportunity
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseOpportunityRequest'
+      responses:
+        '200':
+          description: クローズ成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ===================
+  # Quote Actions
+  # ===================
+  /quotes/{id}/actions/present:
+    post:
+      tags: [Quotes]
+      summary: 見積を提示
+      operationId: presentQuote
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      responses:
+        '200':
+          description: 提示成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+
+  /quotes/{id}/actions/accept:
+    post:
+      tags: [Quotes]
+      summary: 見積を承諾
+      operationId: acceptQuote
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      responses:
+        '200':
+          description: 承諾成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+
+  /quotes/{id}/actions/reject:
+    post:
+      tags: [Quotes]
+      summary: 見積を却下
+      operationId: rejectQuote
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: 却下成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+
+  /quotes/{id}/actions/markPrimary:
+    post:
+      tags: [Quotes]
+      summary: Primary見積に設定
+      operationId: markQuotePrimary
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      responses:
+        '200':
+          description: 設定成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+
+  # ===================
+  # Sharing
+  # ===================
+  /sharing/manual:
+    post:
+      tags: [Sharing]
+      summary: 手動共有を追加
+      operationId: addManualShare
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualShareRequest'
+      responses:
+        '201':
+          description: 共有追加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+
+components:
+  # ===================
+  # Security Schemes
+  # ===================
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # ===================
+  # Parameters
+  # ===================
+  parameters:
+    ObjectName:
+      name: objectName
+      in: path
+      required: true
+      description: オブジェクト名
+      schema:
+        type: string
+        enum: [Account, Contact, Lead, Opportunity, Quote, OpportunityLineItem, QuoteLineItem, Product, Pricebook, PricebookEntry]
+
+    RecordId:
+      name: id
+      in: path
+      required: true
+      description: レコードID
+      schema:
+        type: string
+        format: uuid
+
+    Fields:
+      name: fields
+      in: query
+      description: 取得するフィールド（カンマ区切り）
+      schema:
+        type: string
+      example: Id,Name,OwnerId
+
+    Limit:
+      name: limit
+      in: query
+      description: 取得件数（最大200）
+      schema:
+        type: integer
+        default: 50
+        minimum: 1
+        maximum: 200
+
+    Cursor:
+      name: cursor
+      in: query
+      description: ページングカーソル
+      schema:
+        type: string
+
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: 楽観ロック用のSystemModstamp
+      schema:
+        type: string
+
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      description: 冪等性キー
+      schema:
+        type: string
+        format: uuid
+
+  # ===================
+  # Responses
+  # ===================
+  responses:
+    Unauthorized:
+      description: 認証エラー
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: UNAUTHENTICATED
+              message: 認証が必要です
+
+    Forbidden:
+      description: 権限エラー
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: FORBIDDEN
+              message: この操作を行う権限がありません
+
+    NotFound:
+      description: リソースが見つからない
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: NOT_FOUND
+              message: 指定されたリソースが見つかりません
+
+    Conflict:
+      description: 競合エラー（楽観ロック）
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: CONFLICT
+              message: このレコードは他のユーザーによって更新されました
+
+    ValidationError:
+      description: バリデーションエラー
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: 入力に誤りがあります
+              details:
+                - field: LostReason
+                  message: Closed Lostでは失注理由が必須です
+                  rule: VR-OPP-03
+
+  # ===================
+  # Schemas
+  # ===================
+  schemas:
+    # --- Common ---
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, CONFLICT, AUTOMATION_CONFLICT, RATE_LIMITED, INTERNAL_ERROR]
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+                  rule:
+                    type: string
+            correlationId:
+              type: string
+
+    Record:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        attributes:
+          type: object
+          properties:
+            type:
+              type: string
+            url:
+              type: string
+      additionalProperties: true
+
+    CreateResponse:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+        warnings:
+          type: array
+          items:
+            type: string
+
+    QueryResponse:
+      type: object
+      required: [records, totalSize]
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+        totalSize:
+          type: integer
+        nextCursor:
+          type: string
+
+    BatchGetResponse:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              error:
+                type: string
+
+    SearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              objectName:
+                type: string
+              records:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+
+    # --- User ---
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+        role:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        profile:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        permissions:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              create:
+                type: boolean
+              read:
+                type: boolean
+              update:
+                type: boolean
+              delete:
+                type: boolean
+              viewAll:
+                type: boolean
+              modifyAll:
+                type: boolean
+
+    # --- Metadata ---
+    ObjectMetadata:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        labelPlural:
+          type: string
+        isCustom:
+          type: boolean
+        keyPrefix:
+          type: string
+
+    ObjectDescribe:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldDescribe'
+        stageDefinitions:
+          type: array
+          items:
+            type: object
+            properties:
+              stageName:
+                type: string
+              probability:
+                type: integer
+              forecastCategory:
+                type: string
+              isClosed:
+                type: boolean
+              isWon:
+                type: boolean
+
+    FieldDescribe:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [string, text, integer, decimal, boolean, date, datetime, reference, picklist, multipicklist, email, phone, url]
+        required:
+          type: boolean
+        readable:
+          type: boolean
+        editable:
+          type: boolean
+        referenceTo:
+          type: array
+          items:
+            type: string
+        picklistValues:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              label:
+                type: string
+              isActive:
+                type: boolean
+
+    # --- Lead Convert ---
+    LeadConvertRequest:
+      type: object
+      required: [account, contact]
+      properties:
+        account:
+          type: object
+          required: [mode]
+          properties:
+            mode:
+              type: string
+              enum: [new, existing]
+            id:
+              type: string
+              format: uuid
+              description: mode=existingの場合に必須
+            name:
+              type: string
+              description: mode=newの場合に必須
+        contact:
+          type: object
+          required: [mode]
+          properties:
+            mode:
+              type: string
+              enum: [new, existing]
+            id:
+              type: string
+              format: uuid
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
+        opportunity:
+          type: object
+          properties:
+            create:
+              type: boolean
+              default: true
+            name:
+              type: string
+            stageName:
+              type: string
+              default: Qualification
+            closeDate:
+              type: string
+              format: date
+        ownerId:
+          type: string
+          format: uuid
+
+    LeadConvertResponse:
+      type: object
+      required: [convertedAccountId, convertedContactId]
+      properties:
+        convertedAccountId:
+          type: string
+          format: uuid
+        convertedContactId:
+          type: string
+          format: uuid
+        convertedOpportunityId:
+          type: string
+          format: uuid
+        convertLogId:
+          type: string
+          format: uuid
+
+    # --- Opportunity ---
+    CloseOpportunityRequest:
+      type: object
+      required: [result, closeDate]
+      properties:
+        result:
+          type: string
+          enum: [WON, LOST]
+        closeDate:
+          type: string
+          format: date
+        lostReason:
+          type: string
+          description: result=LOSTの場合に必須
+
+    # --- Sharing ---
+    ManualShareRequest:
+      type: object
+      required: [objectName, recordId, subjectType, subjectId, accessLevel]
+      properties:
+        objectName:
+          type: string
+        recordId:
+          type: string
+          format: uuid
+        subjectType:
+          type: string
+          enum: [User, Role, Group]
+        subjectId:
+          type: string
+          format: uuid
+        accessLevel:
+          type: string
+          enum: [Read, Write]
+
+security:
+  - bearerAuth: []

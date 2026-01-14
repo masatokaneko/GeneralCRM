@@ -1,0 +1,81 @@
+{
+  // Dev Container設定ファイル
+  // 役割: VSCode Dev Container固有の設定（features、拡張機能、環境変数など）
+  "name": "devcontainer-ui-template",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "vscode",
+  "postCreateCommand": "./.devcontainer/post_create_command.sh",
+  // ホストからコンテナへのファイル/ディレクトリのバインドマウント
+  "mounts": [
+    "source=${localWorkspaceFolder}/.claude,target=/workspace/.claude,type=bind",
+    // Unix系（Linux/macOS）の場合はHOME、WindowsはUSERPROFILEを使用
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind,consistency=cached,readonly",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached,readonly"
+  ],
+  // Dev Container Features: 開発ツールのインストール
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24.11.1"
+    },
+    "ghcr.io/devcontainers/features/python:1": {},
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
+    }
+  },
+  // アプリケーション固有の環境変数
+  "containerEnv": {
+    "CLAUDE_CONFIG_PATH": "/workspace/.claude",
+    "WATCHPACK_POLLING": "false",
+    "CHOKIDAR_USEPOLLING": "false"
+  },
+  // ポートフォワーディング設定
+  "forwardPorts": [
+    3000,
+    6006,
+    8080
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Next.js Dev Server",
+      "onAutoForward": "notify"
+    },
+    "6006": {
+      "label": "Storybook",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Documentation",
+      "onAutoForward": "notify"
+    }
+  },
+  "updateRemoteUserUID": true,
+  // VSCode固有のカスタマイズ設定
+  "customizations": {
+    "vscode": {
+      // 自動インストールする拡張機能
+      "extensions": [
+        "Anthropic.claude-code",
+        "biomejs.biome",
+        "bradlc.vscode-tailwindcss",
+        "ms-playwright.playwright"
+      ],
+      // 推奨しない拡張機能（コンテナ内では不要）
+      "nonRecommendedExtensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-azuretools.vscode-containers"
+      ],
+      // エディタ設定
+      "settings": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "quickfix.biome": "explicit",
+          "source.organizeImports.biome": "explicit"
+        }
+      }
+    }
+  }
+}

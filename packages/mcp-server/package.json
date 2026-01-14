@@ -1,0 +1,32 @@
+{
+	"name": "@monorepo/mcp-server",
+	"version": "1.0.0",
+	"description": "Generic MCP server for development tools",
+	"type": "module",
+	"main": "src/server.ts",
+	"scripts": {
+		"start": "tsx src/server.ts",
+		"build": "tsc",
+		"dev": "tsc && npx @modelcontextprotocol/inspector node dist/server.js",
+		"lint": "biome lint ./src",
+		"format": "biome format --write ./src",
+		"check": "biome check --write ./src"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.13.1",
+		"@types/node-fetch": "3.0.2",
+		"@typescript/vfs": "^1.6.1",
+		"node-fetch": "3.3.2",
+		"zod": "^3.24.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.0.5",
+		"@types/node": "24.3.1",
+		"ts-node": "^10.9.2",
+		"tsx": "^4.19.4",
+		"typescript": "^5.8.3"
+	},
+	"volta": {
+		"node": "23.10.0"
+	}
+}

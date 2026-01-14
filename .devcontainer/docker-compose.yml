@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # .env ファイルから環境変数を読み込む（存在する場合）
+    env_file:
+      - ../.env
+    volumes:
+      # プロジェクト全体をマウント
+      - ..:/workspace:cached
+      # node_modulesをボリュームとして分離（パフォーマンス向上）
+      - node_modules:/workspace/node_modules
+      - web_node_modules:/workspace/apps/web/node_modules
+      - docs_node_modules:/workspace/apps/docs/node_modules
+      - mcp_node_modules:/workspace/packages/mcp/node_modules
+      - shared_i18n_node_modules:/workspace/packages/shared-i18n/node_modules
+      # npm/git/turboキャッシュを永続化
+      - npm-cache:/home/vscode/.npm-global
+      - git-cache:/home/vscode/.gitconfig.d
+      - turbo-cache:/workspace/.turbo
+    # コンテナを常に起動状態に保つ
+    command: sleep infinity
+
+volumes:
+  node_modules:
+  web_node_modules:
+  docs_node_modules:
+  mcp_node_modules:
+  shared_i18n_node_modules:
+  npm-cache:
+  git-cache:
+  turbo-cache:

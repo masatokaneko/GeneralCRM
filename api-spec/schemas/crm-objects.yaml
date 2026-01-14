@@ -1,0 +1,740 @@
+# CRM Objects Schema Definitions
+# OpenAPI 3.0 components/schemas
+
+# ===================
+# Account
+# ===================
+Account:
+  type: object
+  required:
+    - name
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    name:
+      type: string
+      maxLength: 255
+      description: 取引先名
+    type:
+      type: string
+      enum: [Prospect, Customer, Partner, Competitor, Other]
+      description: 取引先種別
+    parentId:
+      type: string
+      format: uuid
+      description: 親取引先ID
+    industry:
+      type: string
+      description: 業種
+    website:
+      type: string
+      format: uri
+    phone:
+      type: string
+    billingAddress:
+      $ref: '#/Address'
+    shippingAddress:
+      $ref: '#/Address'
+    annualRevenue:
+      type: number
+      format: decimal
+      description: 年間売上
+    numberOfEmployees:
+      type: integer
+      description: 従業員数
+    status:
+      type: string
+      enum: [Active, Inactive]
+      default: Active
+    description:
+      type: string
+    ownerId:
+      type: string
+      format: uuid
+      description: 所有者ID
+    createdAt:
+      type: string
+      format: date-time
+      readOnly: true
+    createdBy:
+      type: string
+      format: uuid
+      readOnly: true
+    updatedAt:
+      type: string
+      format: date-time
+      readOnly: true
+    updatedBy:
+      type: string
+      format: uuid
+      readOnly: true
+    systemModstamp:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 楽観ロック用バージョン
+
+AccountInput:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      maxLength: 255
+    type:
+      type: string
+      enum: [Prospect, Customer, Partner, Competitor, Other]
+    parentId:
+      type: string
+      format: uuid
+    industry:
+      type: string
+    website:
+      type: string
+      format: uri
+    phone:
+      type: string
+    billingAddress:
+      $ref: '#/Address'
+    shippingAddress:
+      $ref: '#/Address'
+    annualRevenue:
+      type: number
+    numberOfEmployees:
+      type: integer
+    status:
+      type: string
+      enum: [Active, Inactive]
+    description:
+      type: string
+    ownerId:
+      type: string
+      format: uuid
+
+# ===================
+# Contact
+# ===================
+Contact:
+  type: object
+  required:
+    - lastName
+    - accountId
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    accountId:
+      type: string
+      format: uuid
+      description: 取引先ID（必須 - INV-C1）
+    firstName:
+      type: string
+      maxLength: 40
+    lastName:
+      type: string
+      maxLength: 80
+    email:
+      type: string
+      format: email
+    phone:
+      type: string
+    mobilePhone:
+      type: string
+    title:
+      type: string
+      description: 役職
+    department:
+      type: string
+    mailingAddress:
+      $ref: '#/Address'
+    isPrimary:
+      type: boolean
+      default: false
+      description: 主担当者フラグ（Account毎に1人まで - INV-C2）
+    ownerId:
+      type: string
+      format: uuid
+    createdAt:
+      type: string
+      format: date-time
+      readOnly: true
+    updatedAt:
+      type: string
+      format: date-time
+      readOnly: true
+    systemModstamp:
+      type: string
+      format: date-time
+      readOnly: true
+
+ContactInput:
+  type: object
+  required:
+    - lastName
+    - accountId
+  properties:
+    accountId:
+      type: string
+      format: uuid
+    firstName:
+      type: string
+      maxLength: 40
+    lastName:
+      type: string
+      maxLength: 80
+    email:
+      type: string
+      format: email
+    phone:
+      type: string
+    mobilePhone:
+      type: string
+    title:
+      type: string
+    department:
+      type: string
+    mailingAddress:
+      $ref: '#/Address'
+    isPrimary:
+      type: boolean
+    ownerId:
+      type: string
+      format: uuid
+
+# ===================
+# Lead
+# ===================
+Lead:
+  type: object
+  required:
+    - lastName
+    - company
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    firstName:
+      type: string
+      maxLength: 40
+    lastName:
+      type: string
+      maxLength: 80
+    company:
+      type: string
+      description: 会社名
+    email:
+      type: string
+      format: email
+    phone:
+      type: string
+    title:
+      type: string
+    industry:
+      type: string
+    leadSource:
+      type: string
+      enum: [Web, Phone, Referral, Partner, Campaign, Event, Other]
+    status:
+      type: string
+      enum: [New, Working, Qualified, Unqualified]
+      default: New
+    rating:
+      type: string
+      enum: [Hot, Warm, Cold]
+    address:
+      $ref: '#/Address'
+    isConverted:
+      type: boolean
+      readOnly: true
+      description: 変換済みフラグ
+    convertedAccountId:
+      type: string
+      format: uuid
+      readOnly: true
+    convertedContactId:
+      type: string
+      format: uuid
+      readOnly: true
+    convertedOpportunityId:
+      type: string
+      format: uuid
+      readOnly: true
+    convertedAt:
+      type: string
+      format: date-time
+      readOnly: true
+    ownerId:
+      type: string
+      format: uuid
+    createdAt:
+      type: string
+      format: date-time
+      readOnly: true
+    updatedAt:
+      type: string
+      format: date-time
+      readOnly: true
+    systemModstamp:
+      type: string
+      format: date-time
+      readOnly: true
+
+LeadInput:
+  type: object
+  required:
+    - lastName
+    - company
+  properties:
+    firstName:
+      type: string
+      maxLength: 40
+    lastName:
+      type: string
+      maxLength: 80
+    company:
+      type: string
+    email:
+      type: string
+      format: email
+    phone:
+      type: string
+    title:
+      type: string
+    industry:
+      type: string
+    leadSource:
+      type: string
+      enum: [Web, Phone, Referral, Partner, Campaign, Event, Other]
+    status:
+      type: string
+      enum: [New, Working, Qualified, Unqualified]
+    rating:
+      type: string
+      enum: [Hot, Warm, Cold]
+    address:
+      $ref: '#/Address'
+    ownerId:
+      type: string
+      format: uuid
+
+# ===================
+# Opportunity
+# ===================
+Opportunity:
+  type: object
+  required:
+    - name
+    - accountId
+    - stageName
+    - closeDate
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    name:
+      type: string
+      maxLength: 120
+      description: 商談名
+    accountId:
+      type: string
+      format: uuid
+      description: 取引先ID（必須 - INV-O4）
+    stageName:
+      type: string
+      description: 商談ステージ
+    probability:
+      type: integer
+      minimum: 0
+      maximum: 100
+      description: 確度（%）- ステージから自動設定
+    amount:
+      type: number
+      format: decimal
+      description: 金額
+    closeDate:
+      type: string
+      format: date
+      description: 完了予定日
+    isClosed:
+      type: boolean
+      readOnly: true
+      description: クローズ済み
+    isWon:
+      type: boolean
+      readOnly: true
+      description: 受注済み（isWon=true => isClosed=true - INV-O2）
+    lostReason:
+      type: string
+      description: 失注理由（ClosedLost時必須 - INV-O3）
+    forecastCategory:
+      type: string
+      enum: [Pipeline, Best Case, Commit, Closed]
+      readOnly: true
+      description: 予測カテゴリ - ステージから自動設定
+    type:
+      type: string
+      enum: [New Business, Existing Business, Renewal]
+    leadSource:
+      type: string
+    nextStep:
+      type: string
+    description:
+      type: string
+    pricebookId:
+      type: string
+      format: uuid
+      description: 価格表ID
+    primaryQuoteId:
+      type: string
+      format: uuid
+      readOnly: true
+      description: Primary見積ID
+    ownerId:
+      type: string
+      format: uuid
+    createdAt:
+      type: string
+      format: date-time
+      readOnly: true
+    updatedAt:
+      type: string
+      format: date-time
+      readOnly: true
+    systemModstamp:
+      type: string
+      format: date-time
+      readOnly: true
+
+OpportunityInput:
+  type: object
+  required:
+    - name
+    - accountId
+    - stageName
+    - closeDate
+  properties:
+    name:
+      type: string
+      maxLength: 120
+    accountId:
+      type: string
+      format: uuid
+    stageName:
+      type: string
+    amount:
+      type: number
+    closeDate:
+      type: string
+      format: date
+    type:
+      type: string
+      enum: [New Business, Existing Business, Renewal]
+    leadSource:
+      type: string
+    nextStep:
+      type: string
+    description:
+      type: string
+    pricebookId:
+      type: string
+      format: uuid
+    ownerId:
+      type: string
+      format: uuid
+
+# ===================
+# Quote
+# ===================
+Quote:
+  type: object
+  required:
+    - name
+    - opportunityId
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    name:
+      type: string
+      maxLength: 255
+    opportunityId:
+      type: string
+      format: uuid
+      description: 商談ID
+    status:
+      type: string
+      enum: [Draft, Presented, Accepted, Rejected]
+      default: Draft
+    isPrimary:
+      type: boolean
+      default: false
+      description: Primary見積フラグ（Opp毎に1つ - INV-Q1）
+    expirationDate:
+      type: string
+      format: date
+      description: 有効期限
+    subtotal:
+      type: number
+      format: decimal
+      readOnly: true
+      description: 小計
+    discount:
+      type: number
+      format: decimal
+      description: 値引き
+    totalPrice:
+      type: number
+      format: decimal
+      readOnly: true
+      description: 合計
+    taxAmount:
+      type: number
+      format: decimal
+      description: 税額
+    grandTotal:
+      type: number
+      format: decimal
+      readOnly: true
+      description: 総合計
+    billingAddress:
+      $ref: '#/Address'
+    shippingAddress:
+      $ref: '#/Address'
+    pricebookId:
+      type: string
+      format: uuid
+      description: 価格表ID（Oppと同一 - INV-Q2）
+    description:
+      type: string
+    ownerId:
+      type: string
+      format: uuid
+    createdAt:
+      type: string
+      format: date-time
+      readOnly: true
+    updatedAt:
+      type: string
+      format: date-time
+      readOnly: true
+    systemModstamp:
+      type: string
+      format: date-time
+      readOnly: true
+
+QuoteInput:
+  type: object
+  required:
+    - name
+    - opportunityId
+  properties:
+    name:
+      type: string
+      maxLength: 255
+    opportunityId:
+      type: string
+      format: uuid
+    expirationDate:
+      type: string
+      format: date
+    discount:
+      type: number
+    billingAddress:
+      $ref: '#/Address'
+    shippingAddress:
+      $ref: '#/Address'
+    description:
+      type: string
+    ownerId:
+      type: string
+      format: uuid
+
+# ===================
+# Opportunity Line Item
+# ===================
+OpportunityLineItem:
+  type: object
+  required:
+    - opportunityId
+    - pricebookEntryId
+    - quantity
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    opportunityId:
+      type: string
+      format: uuid
+    pricebookEntryId:
+      type: string
+      format: uuid
+      description: 価格表エントリID（Oppと同一価格表 - INV-LI1/LI2）
+    productId:
+      type: string
+      format: uuid
+      readOnly: true
+    productName:
+      type: string
+      readOnly: true
+    quantity:
+      type: number
+      minimum: 0.01
+    unitPrice:
+      type: number
+      format: decimal
+    totalPrice:
+      type: number
+      format: decimal
+      readOnly: true
+    discount:
+      type: number
+      format: decimal
+    description:
+      type: string
+    sortOrder:
+      type: integer
+
+# ===================
+# Quote Line Item
+# ===================
+QuoteLineItem:
+  type: object
+  required:
+    - quoteId
+    - pricebookEntryId
+    - quantity
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    quoteId:
+      type: string
+      format: uuid
+    pricebookEntryId:
+      type: string
+      format: uuid
+    productId:
+      type: string
+      format: uuid
+      readOnly: true
+    productName:
+      type: string
+      readOnly: true
+    quantity:
+      type: number
+      minimum: 0.01
+    unitPrice:
+      type: number
+      format: decimal
+    totalPrice:
+      type: number
+      format: decimal
+      readOnly: true
+    discount:
+      type: number
+      format: decimal
+    description:
+      type: string
+    sortOrder:
+      type: integer
+
+# ===================
+# Product & Pricebook
+# ===================
+Product:
+  type: object
+  required:
+    - name
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    name:
+      type: string
+      maxLength: 255
+    productCode:
+      type: string
+    description:
+      type: string
+    isActive:
+      type: boolean
+      default: true
+    family:
+      type: string
+      description: 製品ファミリー
+
+Pricebook:
+  type: object
+  required:
+    - name
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    name:
+      type: string
+      maxLength: 255
+    isActive:
+      type: boolean
+      default: true
+    isStandard:
+      type: boolean
+      readOnly: true
+      description: 標準価格表フラグ
+    description:
+      type: string
+
+PricebookEntry:
+  type: object
+  required:
+    - pricebookId
+    - productId
+    - unitPrice
+  properties:
+    id:
+      type: string
+      format: uuid
+      readOnly: true
+    pricebookId:
+      type: string
+      format: uuid
+    productId:
+      type: string
+      format: uuid
+    unitPrice:
+      type: number
+      format: decimal
+    isActive:
+      type: boolean
+      default: true
+    useStandardPrice:
+      type: boolean
+      default: false
+
+# ===================
+# Common Types
+# ===================
+Address:
+  type: object
+  properties:
+    street:
+      type: string
+    city:
+      type: string
+    state:
+      type: string
+    postalCode:
+      type: string
+    country:
+      type: string

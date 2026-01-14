@@ -1,0 +1,368 @@
+{
+  "realm": "crm",
+  "enabled": true,
+  "displayName": "CRM System",
+  "displayNameHtml": "<b>CRM System</b>",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "system_admin",
+        "description": "System Administrator - Full access to all features and settings"
+      },
+      {
+        "name": "admin",
+        "description": "Tenant Administrator - Full access within tenant"
+      },
+      {
+        "name": "manager",
+        "description": "Manager - Can manage team and approve records"
+      },
+      {
+        "name": "user",
+        "description": "Standard User - Basic CRM access"
+      },
+      {
+        "name": "readonly",
+        "description": "Read Only User - View access only"
+      }
+    ],
+    "client": {
+      "crm-web": [
+        {
+          "name": "crm_access",
+          "description": "Access to CRM Web Application"
+        }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "name": "Sales",
+      "path": "/Sales",
+      "subGroups": [
+        {
+          "name": "Sales Team A",
+          "path": "/Sales/Sales Team A"
+        },
+        {
+          "name": "Sales Team B",
+          "path": "/Sales/Sales Team B"
+        }
+      ]
+    },
+    {
+      "name": "Marketing",
+      "path": "/Marketing"
+    },
+    {
+      "name": "Support",
+      "path": "/Support"
+    }
+  ],
+  "defaultRoles": ["user"],
+  "requiredCredentials": ["password"],
+  "passwordPolicy": "length(8) and digits(1) and upperCase(1) and specialChars(1)",
+  "clients": [
+    {
+      "clientId": "crm-web",
+      "name": "CRM Web Application",
+      "description": "Next.js CRM Frontend Application",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "crm-web-secret-change-in-production",
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:3001/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:3001"
+      ],
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "crm-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "protocolMappers": [
+        {
+          "name": "tenant-id-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "tenant_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "crm-role-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "crm_role",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "crm_role",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "profile-id-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "profile_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "profile_id",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "crm-api",
+      "name": "CRM Backend API",
+      "description": "CRM Backend Service",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "crm-api-secret-change-in-production",
+      "bearerOnly": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "crm-tenant",
+      "description": "CRM Tenant Information Scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "tenant-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "tenant_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@example.com",
+      "email": "admin@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "System",
+      "lastName": "Administrator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["system_admin", "admin"],
+      "clientRoles": {
+        "crm-web": ["crm_access"]
+      },
+      "attributes": {
+        "tenant_id": ["tenant-001"],
+        "crm_role": ["System Administrator"],
+        "profile_id": ["profile-admin"]
+      }
+    },
+    {
+      "username": "manager@example.com",
+      "email": "manager@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Sales",
+      "lastName": "Manager",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "manager123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["manager"],
+      "clientRoles": {
+        "crm-web": ["crm_access"]
+      },
+      "attributes": {
+        "tenant_id": ["tenant-001"],
+        "crm_role": ["Sales Manager"],
+        "profile_id": ["profile-manager"]
+      },
+      "groups": ["/Sales"]
+    },
+    {
+      "username": "user1@example.com",
+      "email": "user1@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Taro",
+      "lastName": "Yamada",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "crm-web": ["crm_access"]
+      },
+      "attributes": {
+        "tenant_id": ["tenant-001"],
+        "crm_role": ["Sales Representative"],
+        "profile_id": ["profile-user"]
+      },
+      "groups": ["/Sales/Sales Team A"]
+    },
+    {
+      "username": "user2@example.com",
+      "email": "user2@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Hanako",
+      "lastName": "Tanaka",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "crm-web": ["crm_access"]
+      },
+      "attributes": {
+        "tenant_id": ["tenant-001"],
+        "crm_role": ["Sales Representative"],
+        "profile_id": ["profile-user"]
+      },
+      "groups": ["/Sales/Sales Team B"]
+    },
+    {
+      "username": "readonly@example.com",
+      "email": "readonly@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Viewer",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "readonly123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["readonly"],
+      "clientRoles": {
+        "crm-web": ["crm_access"]
+      },
+      "attributes": {
+        "tenant_id": ["tenant-001"],
+        "crm_role": ["Read Only"],
+        "profile_id": ["profile-readonly"]
+      }
+    }
+  ],
+  "smtpServer": {},
+  "eventsEnabled": true,
+  "eventsListeners": ["jboss-logging"],
+  "enabledEventTypes": [
+    "LOGIN",
+    "LOGIN_ERROR",
+    "LOGOUT",
+    "LOGOUT_ERROR",
+    "CODE_TO_TOKEN",
+    "CODE_TO_TOKEN_ERROR",
+    "CLIENT_LOGIN",
+    "CLIENT_LOGIN_ERROR",
+    "REFRESH_TOKEN",
+    "REFRESH_TOKEN_ERROR",
+    "INTROSPECT_TOKEN",
+    "INTROSPECT_TOKEN_ERROR",
+    "UPDATE_PROFILE",
+    "UPDATE_PASSWORD",
+    "SEND_RESET_PASSWORD",
+    "RESET_PASSWORD",
+    "SEND_VERIFY_EMAIL",
+    "VERIFY_EMAIL",
+    "REGISTER",
+    "REGISTER_ERROR"
+  ],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true
+}

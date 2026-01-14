@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "UI Demo",
+    "description": "UI Demo Application"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "prev": "Previous"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalid": "Invalid value"
+  }
+}

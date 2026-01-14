@@ -1,0 +1,22 @@
+{
+  "name": "@monorepo/shared-i18n",
+  "version": "1.0.0",
+  "description": "Shared internationalization resources",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "locales"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "i18n",
+    "internationalization",
+    "translations"
+  ],
+  "license": "MIT"
+}
