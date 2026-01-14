@@ -1,12 +1,12 @@
 {
   "server": {
-    "name": "Cursor Next.js Boilerplate MCP",
+    "name": "CRM Platform MCP",
     "version": "1.0.0",
-    "description": "Development tools MCP server for cursor-nextjs-boilerplate project"
+    "description": "Development tools MCP server for CRM Platform"
   },
   "paths": {
     "docsDir": "docs",
-    "mcpServerDir": "mcp-server"
+    "mcpServerDir": "packages/mcp-server"
   },
   "features": {
     "docs": true,
